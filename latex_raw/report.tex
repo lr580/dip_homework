@@ -1,0 +1,47 @@
+\PassOptionsToPackage{quiet}{fontspec} 
+\documentclass{ctexart}
+\usepackage{lipsum}
+% \ctexset{section={format+=\raggedright}}
+\begin{document}
+\title{数字图像处理基础-图书ISBN号字符识别}
+\author{覃梓鑫(软工2003-20202005175)}
+\date{\today}
+\maketitle
+\tableofcontents
+\newpage
+\section{概述}
+\noindent
+\textbf{设计目的:}\\
+\textbf{内容:}\\
+\textbf{运行环境:}
+Windows10 + Python 3.10.6\\
+所需 Python 第三方库如下：
+\begin{itemize}
+    \item 略
+\end{itemize}
+\noindent
+\textbf{开发工具:}%不用加多余的\\
+\begin{itemize}
+    \item 操作系统 Windows 10 21H2
+    \item 集成开发环境 Visual Studio Code 1.73.1
+    \item 文档编写工具 TeXworks 0.6.6
+    \item 编程语言 Python 3.10.6
+    % \item 版本管理工具 git 2.29.0
+    \item 编码格式 UTF8
+\end{itemize}
+
+\section{整体设计}
+\section{具体实现}
+\subsection{流程图}
+\subsection{数学模型}
+\subsubsection{灰度化}
+根据课件(第11章-P38页-4彩色平衡)内容可知，彩色图像数字化后，景物颜色会偏移真实颜色，导致三基色不平衡。这里采用白平衡法计算灰度，即使用公式：
+\[I(x,y)=0.299\cdot f_R(x,y)+0.587\cdot f_G(x,y)+0.114\cdot f_B(x,y)\]
+\subsection{核心程序}
+\subsection{处理过程}
+\section{实验结果及分析}
+\section{总结与体会}
+\section{致谢}
+\section{参考文献}
+\section{附录}
+\end{document}
