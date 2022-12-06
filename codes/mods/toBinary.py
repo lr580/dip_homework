@@ -1,6 +1,4 @@
 import numpy as np
-import cv2
-from toGrey import toGrey
 
 
 def getThrestHold(img):
@@ -33,6 +31,8 @@ def toBinary(img, x, ltx=0, gex=255):
 
 # 算法测试与展示
 '''
+import cv2
+from toGrey import toGrey
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 img = cv2.imread('../b.png')
@@ -47,6 +47,8 @@ plt.show()
 
 # 算法比较：库函数调用
 '''
+import cv2
+from toGrey import toGrey
 def toBinary(img):
     # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img = toGrey(img)
