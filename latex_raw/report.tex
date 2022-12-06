@@ -51,15 +51,17 @@ Windows10 + Python 3.10.6\\
 \[I(x,y)=0.299\cdot f_R(x,y)+0.587\cdot f_G(x,y)+0.114\cdot f_B(x,y)\] %不需要\\
 但是如果直接使用Python迭代来处理上述过程，非常缓慢。所以考虑用\textbf{矩阵运算优化}。我们知道，向量内积的计算结果是实数，故有：
 \[(R,G,B)\cdot(0.299,0.587,0.114)=0.299R+0.587G+0.114B\]
-因此，考虑用向量内积，直接调用底层依托 C++ 实现的 numpy 的向量运算 `dot` 函数，一来 C++ 比 Python 快，二来矩阵运算比迭代快，这样能起到不小的常数优化作用。在下文的其他具体实现里也会反复用到类似的思路。因此，核心代码如下：
+因此，考虑用向量内积，直接调用底层依托 C++ 实现的 numpy 的向量运算 dot 函数，一来 C++ 比 Python 快，二来矩阵运算比迭代快，这样能起到不小的常数优化作用。在下文的其他具体实现里也会反复用到类似的思路。因此，核心代码如下：
 \begin{lstlisting}[language=python]
 import numpy as np
 def toGrey(img):
+    if len(img.shape) == 2:  # 已经是灰度图像了
+        return img
     rd = img.shape[2]  # 可能是3/4(png有alpha通道)
     line = [0.299, 0.587, 0.114, 0][:rd]
-    arr = [line for i in range(rd)]
-    trans = np.array(arr).transpose()  # 矩阵转置
+    trans = np.array(line).transpose()  # 矩阵转置
     img2 = np.dot(img, trans).astype(img.dtype)
+    img2 = np.reshape(img2, img.shape[:2])
     return img2
 \end{lstlisting}
 运行效果如下：
@@ -68,9 +70,56 @@ def toGrey(img):
     \includegraphics[height=120pt]{sample_toGrey}
     \caption{灰度化效果展示}
 \end{figure}
+
+
+\subsection{二值化}
+根据课件(第9章-3基于阈值的图像分割)内容可知，可以按照图像的灰度不同，选取一个阈值 $x$，将灰度 $\ge x$ 的都转为一种灰度，其余的转为另一种灰度，实现二值化。这个阈值如果手动选取的话适应性不够强，所以考虑用基本自适应阈值。采用 Otsu 算法(最大类间方差法)，具体步骤如下：
+设图像长宽为 $n,m$，最佳阈值是 $x$，$< x$ 的点有 $n_0$ 个，$\ge x$ 的点有 $n_1$ 个，原图 $< x$ 的点平均灰度为 $\mu_0$，$\ge x$ 的点平均灰度为 $\mu_1$，令：
+\[w_0=\frac{n_0}{nm},\quad w_1=\frac{n_1}{nm}\]
+显然满足：
+\[n_0+n_1=nm,\quad w_0+w_1=1\]
+则二值化前的均值 $\mu$ 显然满足：
+\[\mu=w_0\cdot\mu_0+w_1\cdot\mu_1\]
+为了让方差最大化，设方差 $\sigma$ 为：
+\[\sigma=w_0\cdot(\mu_0-\mu)^2+w_1\cdot(\mu_1-\mu)^2\]
+联立解得：$\sigma=w_0\cdot w_1\cdot (\mu_0-\mu_1)^2$，因此，将所有 $\ge x$ 的点与 $< x$ 的点分别染色为两种灰度，即可实现灰度化。\\
+具体到代码实现上，可以枚举 $x\in[0,255]$，然后分别计算 $\sigma$，将取得最大 $\sigma$ 的 $x$ 作为阈值即可。\\
+考虑到在本题中，一般是从按的背景上分割出暗的物体(即数字)，所以将 $< x$ 的都染为黑色，$\ge x$ 的都染成白色。\\
+上述代码涉及大量遍历图像的操作，将其用\textbf{矩阵运算优化}，能显著提升运算效率。时间复杂度为 $O(255nm)$，对较小的图像能以几乎一瞬间求出结果。\\
+核心代码如下：
+\begin{lstlisting}[language=python]
+import numpy as np
+def getThrestHold(img):
+    n, m = img.shape
+    mx, x = -1, 0  # mx是当前最大值,x是取得最值的阈值
+    np.seterr(divide='ignore',invalid='ignore')#零除
+    for i in range(0, 256):
+        n0 = np.sum(img < i)
+        n1 = n*m-n0
+        w0 = n0/(n*m)
+        w1 = 1-w0
+        mu0 = np.sum(img[img < i])/n0
+        mu1 = np.sum(img[img >= i])/n1
+        g = w0*w1*(mu0-mu1)**2
+        if g > mx:
+            mx, x = g, i
+    return x
+def toBinary(img, x, ltx=0, gex=255):
+    img2 = img.copy()
+    img2[img2 < x] = ltx
+    img2[img2 >= x] = gex
+    return img2
+\end{lstlisting}
+运行效果如下：
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[height=120pt]{sample_toBinary}
+    \caption{二值化效果展示}
+\end{figure}
 \section{实验结果及分析}
 \section{总结与体会}
 \section{致谢}
 \section{参考文献}
+Otsu 算法解析\\https://blog.csdn.net/a15779627836/article/details/124151125
 \section{附录}
 \end{document}
