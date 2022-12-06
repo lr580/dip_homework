@@ -1,11 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-import cv2
 from toGrey import toGrey
 from toBinary import getThrestHold, toBinary
-from saveImg import saveImgs
-import os
 
 # 统计图
 '''
@@ -110,6 +106,8 @@ def filtRanges(arr, low=0.3, maxDel=6):
     return arr
 
 
+# 效果展示
+'''
 img = cv2.imread('../../imgs/02.png')
 img = toGrey(img)
 img = toBinary(img, getThrestHold(img))
@@ -120,3 +118,23 @@ sumHori2, sumVert2 = getHoriAndVertSum(img2)
 rng = filtRanges(getRanges(sumVert2))
 imgs = splitByVerts(img2, rng)
 saveImgs(imgs)
+'''
+
+
+def plotSumAnalyse(img0, draw2Hori=True):
+    '''绘制彩色图像的水平垂直频次分析'''
+    img = toGrey(img0)
+    img = toBinary(img, getThrestHold(img))
+    sumHori, sumVert = getHoriAndVertSum(img)
+    plt.subplot(221)
+    plt.imshow(img, 'gray')  # 不输出原图
+    plt.subplot(223)
+    plt.plot(sumVert)
+    if draw2Hori:
+        plt.subplot(224)
+        plt.plot(sumHori)
+    plt.subplot(222)
+    lt = list(range(img.shape[0]))
+    plt.ylim(img.shape[0], 0)  # 这个倒了lt自己也会倒
+    plt.plot(sumHori, lt)
+    plt.show()

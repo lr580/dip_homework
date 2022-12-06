@@ -205,12 +205,130 @@ def filtRanges(arr, low=0.3, maxDel=6):
 \end{figure}
 
 \subsection{预处理旋转}
+上述字符定位与分割过程对理想状态的 ISBN 字符分割表现良好，但是并非所有图像都是理想的。最常见的就是存在旋转，如：
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=260pt]{isbn_rotated}
+    \caption{旋转过的ISBN图像及其分析}
+\end{figure}
+
+观察可知，ISBN 条形码明显的特征是有许多直线的条形，被旋转后，直线的朝向也会发生改变。如果我们能找出这些条形码直线及其旋转角，就能将其旋转回去。
+
+根据课件(第9章-基于边缘检测的图像分割-Hough变换)可知，使用 Hough(霍夫)变换能够找到图中的直线。我们可以先使用 Canny 算子进行边缘检测，然后使用 Hough 变换对边缘检测结果提取其中的直线。
+
+在实践过程中，不难发现，使用 Hough 变换需要设定一个阈值 $lim$，只有直线上的点数(即直线长度)超过 $lim$ 的直线才能被检测到。然而，图像变化多样，我们很难实现设定固定的 $lim$ 来满足不同的真实情境。因此，我采用了\textbf{倍增法}来快速枚举 $lim$ 的值，具体思想为：先设定一个较高的初始 $lim$，然后进行 Hough 变换找直线，如果找到的直线数目没有或很少，就证明阈值过高，这时将阈值除以一个常数来缩小阈值 $lim$，并继续查找，一直重复如上步骤直到找到为止。可以证明当阈值趋于 $0$ 时必然能找到。该算法能在对数复杂度内找到一个较为合适的阈值并进行直线分割。
+
+核心代码如下：
+
+\begin{lstlisting}[language=python]
+def getLines(img):
+    #传入二值化图像,输出其倍增法所有检测出来的直线
+    #50,150是最小最大阈值,3是sobel卷积核大小
+    edges = cv2.Canny(img, 50, 150, apertureSize=3)
+    lim = int(np.min(img.shape)*0.8)
+    while True:
+        lines=cv2.HoughLines(edges,1,np.pi/180,lim)
+        if type(lines) == type(None) 
+            or len(lines) <= 5:
+            lim = int(lim*0.9)
+            continue#找不到/太少就不断缩小要求
+        break
+\end{lstlisting}
+
+效果如图所示：
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=120pt]{hough}
+    \caption{Hough变换处理旋转图像提取直线并标注}
+\end{figure}
+
+进行上述过程后，实际上我们将得到一组直线。由于检测出来的直线不保证都是条形码上的直线，所以我们考虑选择这些直线里斜率处于中位数的作为图像的倾斜角，并对图像进行旋转还原。
+
+Hough 变换得到的每条直线都是极坐标系下的 $(\rho,\theta)$ 参数，通过极坐标变换，可以计算出该直线在平面直角坐标下的任意两点，从而计算出直线的斜率。然后将直线斜率旋转到与纵坐标轴垂直即可。
+
+代码如下：
+\begin{lstlisting}[language=python]
+def getMidAngle(lines):
+    '''给定极坐标直线组,返回位于中位数斜角(角度制)'''
+    lt = []
+    for line in lines:
+        rho, theta = line[0]
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        x1 = int(x0 + 1000 * (-b))
+        y1 = int(y0 + 1000 * (a))
+        x2 = int(x0 - 1000 * (-b))
+        y2 = int(y0 - 1000 * (a))
+        k = np.arctan2(x2-x1, y2-y1)
+        lt.append(k/np.pi*180)
+    lt.sort()
+    return lt[lines.shape[0]//2]
+\end{lstlisting}
+
+进行旋转的核心代码如下：
+\begin{lstlisting}[language=python]
+def rotateImg(img, ang):
+    #以中心旋转图像,顺时针转动ang角度并返回(白色填充)
+    h, w = img.shape
+    cx, cy = w//2, h//2
+    # 1.0表示不缩放
+    m = cv2.getRotationMatrix2D((cx, cy), -ang, 1.0)
+    mc, ms = np.abs(m[0, 0:2])
+    nw = int(h*ms+w*mc)
+    nh = int(h*mc+w*ms)
+    m[0, 2] += (nw/2)-cx
+    m[1, 2] += (nh/2)-cy
+    return cv2.warpAffine(img, m, (nw, nh),
+            borderValue=(255, 255, 255))
+\end{lstlisting}
+
+合并代码如下：
+\begin{lstlisting}[language=python]
+def autoRotate(img):
+    '''以二值化图像为输入，输出自动旋转后的图像'''
+    lines = getLines(img)
+    ang = getMidAngle(lines)
+    return rotateImg(img, ang)
+\end{lstlisting}
+
+效果图展示：
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=120pt]{sample_autoRotate}
+    \caption{将条形码自动旋转到垂直效果}
+\end{figure}
+
+显然，根据算法步骤可知，我们可以将条形码从“打横”的变成“打竖”的，但是旋转到大致垂直后，条形码上的字究竟是正的，还是反的，这是 Hough 变换无法实现的。为了解决这个问题，我们将在后续处理中，将图片分别当成是正的和反的都处理一遍，哪个匹配出更多内容就取哪个。
+
+\subsection{预处理图片分割}
+进行过预处理旋转后，仍有一个问题，如果图像不只有条形码，还有书本封面的其他内容，会干扰条形码的分析。所以我们希望能先预处理，使其只截取出条形码部分(如图3所示效果)。否则，其统计特征如下，进行分析困难：
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=120pt]{isbn_beforeCut}
+    \caption{条形码外的封面内容干扰统计}
+\end{figure}
 
 
 \section{实验结果及分析}
 \section{总结与体会}
 \section{致谢}
 \section{参考文献}
-Otsu 算法解析\\https://blog.csdn.net/a15779627836/article/details/124151125
+Otsu 算法解析
+%https://blog.csdn.net/a15779627836/article/details/124151125
+
+Canny边缘检测
+%https://blog.csdn.net/weixin_42272768/article/details/111244896
+
+Hough变换详解
+%https://blog.csdn.net/qq_30460949/article/details/90293147
+%https://blog.csdn.net/qq_41112170/article/details/125729100
+
+图片旋转
+%https://blog.csdn.net/wyx100/article/details/80541726
+
 \section{附录}
 \end{document}
