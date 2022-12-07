@@ -2,15 +2,15 @@ import cv2
 import os
 from templatePredeal import strname
 from toBinary import getBinary
-
+from stringSplit import splitNumbers
 
 
 def loadTemplates(path='../templates'):
     '''从文件夹路径返回标准字符模板(经过二值化)'''
     t = [dict() for i in range(3)]
-    for i in range(3):
+    for i in range(1):
         for j in strname:
-            name = '%d_%s.png' % (i+1, j)
+            name = '%d_%s.png' % (4, j)
             dest = os.path.join(path, name)
             t[i][j] = cv2.imread(dest)
             t[i][j] = getBinary(t[i][j])
@@ -39,32 +39,31 @@ def getNumber(src, fontid):
     return maxchar
 
 
-def compares(srcs, fontid):
-    '''将分割图像列表与特定字体比较,返回结果'''
-    return [getNumber(i, fontid) for i in srcs]
-
-
 def match(srcs):
     '''将分割图像列表与模板比较,返回结果'''
-    return [getNumber(i, 2) for i in srcs]
+    return [getNumber(i, 0) for i in srcs]
 
-#调试用
-def analyse(src):
-    for i in strname:
-        pass
+
+def getMatch(img):
+    '''给定二值化图像，输出识别结果数组'''
+    srcs = splitNumbers(img)
+    return [getNumber(i, 0) for i in srcs]
+
 
 # 效果展示
+'''
 from stringSplit import *
 from saveImg import saveImgs
-img = cv2.imread('../../imgs/02.png')
-img = getBinary(img)
+img = cv2.imread('../../imgs/10.png')
+img = toGrey(img)
+img = toBinary(img, getThrestHold(img))
 sumHori, sumVert = getHoriAndVertSum(img)
 l, r = getNumberLineRange(sumHori)
 img2 = img[l:r, :]
 sumHori2, sumVert2 = getHoriAndVertSum(img2)
 rng = filtRanges(getRanges(sumVert2))
 imgs = splitByVerts(img2, rng)
-saveImgs(imgs)
-print(len(imgs))
+# saveImgs(imgs)
 res = match(imgs)
 [print(i, end='') for i in res]
+'''

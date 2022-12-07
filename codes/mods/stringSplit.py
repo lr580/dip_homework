@@ -1,7 +1,7 @@
+from saveImg import saveImgs
 import numpy as np
 import matplotlib.pyplot as plt
-from toGrey import toGrey
-from toBinary import getThrestHold, toBinary
+from toBinary import *
 
 # 统计图
 '''
@@ -97,6 +97,8 @@ saveImgs(imgs)
 def filtRanges(arr, low=0.3, maxDel=6):
     '''输入区间,返回经过初步筛选后的有效区间'''
     n = len(arr)
+    if n == 0:  # 无效区间
+        return []
     b = [(i, arr[i][1]-arr[i][0]) for i in range(n)]
     b.sort(key=lambda v: v[1])  # 按长度排序
     lim = low*b[n//2][1]  # 中位数
@@ -121,6 +123,18 @@ saveImgs(imgs)
 '''
 
 
+def splitNumbers(img):
+    '''输入一张二值化图像，返回其分割出来的字符子图列表'''
+    sumHori, sumVert = getHoriAndVertSum(img)
+    l, r = getNumberLineRange(sumHori)
+    img2 = img[l:r, :]
+    sumHori2, sumVert2 = getHoriAndVertSum(img2)
+    rng = filtRanges(getRanges(sumVert2))
+    imgs = splitByVerts(img2, rng)
+    return imgs
+
+
+# 调试用
 def plotSumAnalyse(img0, draw2Hori=True):
     '''绘制彩色图像的水平垂直频次分析'''
     img = toGrey(img0)
@@ -138,3 +152,30 @@ def plotSumAnalyse(img0, draw2Hori=True):
     plt.ylim(img.shape[0], 0)  # 这个倒了lt自己也会倒
     plt.plot(sumHori, lt)
     plt.show()
+
+
+# import cv2
+# img = cv2.imread('../../imgs/10.png')
+# plotSumAnalyse(img)
+
+
+# 调试用
+def plotSplit(img0):
+    img = toGrey(img0)
+    img = toBinary(img, getThrestHold(img))
+    sumHori, sumVert = getHoriAndVertSum(img)
+    l, r = getNumberLineRange(sumHori)
+    print(l, r)
+    img2 = img[l:r, :]
+    sumHori2, sumVert2 = getHoriAndVertSum(img2)
+    rng = filtRanges(getRanges(sumVert2))
+    imgs = splitByVerts(img2, rng)
+    print(len(imgs))
+    saveImgs(imgs)
+    plt.subplot(121)
+    plt.imshow(img, 'gray')
+    plt.subplot(122)
+    plt.imshow(img2, 'gray')
+    plt.show()
+
+# plotSplit(img)
