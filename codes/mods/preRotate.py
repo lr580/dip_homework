@@ -89,7 +89,7 @@ def getMidAngle(lines):
 
 def rotateImg(img, ang):
     '''以中心旋转图像,顺时针转动ang角度并返回(白色填充)'''
-    h, w = img.shape
+    h, w = img.shape[:2]
     cx, cy = w//2, h//2
     # 1.0表示不缩放
     m = cv2.getRotationMatrix2D((cx, cy), -ang, 1.0)
@@ -98,8 +98,14 @@ def rotateImg(img, ang):
     nh = int(h*mc+w*ms)
     m[0, 2] += (nw/2)-cx
     m[1, 2] += (nh/2)-cy
+    numBlack = img[img == 0].size
+    numWhite = img.size-numBlack
+    if numBlack > numWhite:
+        c = (0, 0, 0)
+    else:
+        c = (255, 255, 255)
     return cv2.warpAffine(img, m, (nw, nh),
-                          borderValue=(255, 255, 255))
+                          borderValue=c)
 
 
 def autoRotate(img):
@@ -108,7 +114,17 @@ def autoRotate(img):
     ang = getMidAngle(lines)
     return rotateImg(img, ang)
 
-#自动旋转 展示
+
+def autoRotateC(img):
+    '''以彩色图像为输入，输出自动旋转后的图像'''
+    img2 = toGrey(img)
+    img2 = toBinary(img2, getThrestHold(img2))
+    lines = getLines(img2)
+    ang = getMidAngle(lines)
+    return rotateImg(img, ang)
+
+
+# 自动旋转 展示
 '''
 img = cv2.imread('../../imgs/07.png')
 img = toGrey(img)

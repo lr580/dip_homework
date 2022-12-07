@@ -20,7 +20,7 @@ def getThrestHold(img):
     return x
 
 
-def toBinary(img, x, ltx=0, gex=255):
+def toBinary(img, x=200, ltx=0, gex=255):
     '''函数功能:传入灰度图img和阈值x,将其二值化并返回\n
     规定<x的染成白色(ltx),>=x的染成灰色(gex)'''
     img2 = img.copy()

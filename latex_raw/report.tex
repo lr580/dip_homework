@@ -3,6 +3,7 @@
 \usepackage{lipsum}
 \usepackage{xcolor,listings}
 \usepackage{graphicx,float}
+\usepackage{verbatim}
 \graphicspath{{imgs/}}
 % \ctexset{section={format+=\raggedright}}
 \lstset{
@@ -269,6 +270,8 @@ def getMidAngle(lines):
     return lt[lines.shape[0]//2]
 \end{lstlisting}
 
+旋转时会产生新的图像区域，如果图片(书封面)本身是深色背景的，则图片边缘都是黑色的，应当用黑色填充；否则，应当用白色填充，可以进行特判，取出现频率最高的颜色进行填充。
+
 进行旋转的核心代码如下：
 \begin{lstlisting}[language=python]
 def rotateImg(img, ang):
@@ -282,8 +285,15 @@ def rotateImg(img, ang):
     nh = int(h*mc+w*ms)
     m[0, 2] += (nw/2)-cx
     m[1, 2] += (nh/2)-cy
+    #分类讨论填充新区域的颜色
+    numBlack = img[img == 0].size
+    numWhite = img.size-numBlack
+    if numBlack > numWhite:
+        c = (0, 0, 0)
+    else:
+        c = (255, 255, 255)
     return cv2.warpAffine(img, m, (nw, nh),
-            borderValue=(255, 255, 255))
+            borderValue=c)
 \end{lstlisting}
 
 合并代码如下：
@@ -312,6 +322,82 @@ def autoRotate(img):
     \caption{条形码外的封面内容干扰统计}
 \end{figure}
 
+\begin{comment}
+根据课件(第12章-形态学图像处理)可知，数学形态学图像处理的基本思想是：用具有一定形态的结构元素(如一定大小的矩形、圆或菱形等)探测目标图像，能达到图像分析与识别的目的。因此，考虑使用形态学方法进行处理并提取出有效的子图区域。
+
+观察可知，ISBN 的有效区域总是一个白色的矩形为背景的。我们可以考虑找到这个矩形区域并将其提取出来。
+
+根据课件内容可知，闭运算(先膨胀再腐蚀)能磨光物体内边界，开运算(先腐蚀再膨胀)能磨光图像外边界。
+
+根据类似的经验，我们可以先膨胀图像，将条形码矩形的内部内容去掉，用背景色替代，再进行一次腐蚀去噪。
+
+不妨定义一个横向的长条矩形，如 $(n\times 1)$ 矩形进行膨胀；然后用 $(1\times m)$ 的纵向矩形进行腐蚀，去掉纵向的残留条形码等内容。考虑到膨胀与腐蚀操作的本质，我们认为 $n,m$ 的选取可以与具体图片的大小无关。这里使用的并非闭运算，因为前后不是同一个结构元素。根据经验，不妨设 $n=20,m=15$，实践表明，能取得较优的效果。
+
+代码如下：
+这是一段多行注释。
+它可以包含任意多行文本。
+注释内容不会在编译后的文档中显示。
+\end{comment}
+
+检测一张图像中出现的矩形区域，可以采用 这篇论文 中提出的算法。调用相关算法后，我们能够得到图像上的所有轮廓。根据本题的特殊性，我们只需要选取其中的所有矩形轮廓。特别地，有时候如果轮廓检测失败，可能会得到许多很小的轮廓，不妨设置一个阈值如 $20\%$，所有面积小于原图像的 $20\%$ 的矩形全部忽略掉。然后，我们取出最大的矩形，作为检测的目标。
+
+为了得到更准确的结果，我们需要实现进行预处理，例如可以先进行高斯模糊，然后再用 Canny 算法做边缘检测，以边缘检测结果的二值化图像开始提取轮廓。
+
+核心代码如下：
+
+\begin{lstlisting}[language=python]
+def getMainRectangle(img):
+    '''传入任意图像,返回其出现的最大矩形区域'''
+    imgGray = toGrey(img)
+    # 高斯模糊
+    imgBlur = cv2.GaussianBlur(imgGray, (5, 5), 1)
+    # Canny算子边缘检测
+    imgCanny = cv2.Canny(imgBlur, 60, 60)
+    # 边缘检测,RETR_TREE可能更精准
+    contours, _ = cv2.findContours(
+    imgCanny, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    res = []  # 答案
+    nh, nw = img.shape[:2]
+    totArea = nh*nw
+    for obj in contours:
+        # 计算轮廓内区域的面积
+        area = cv2.contourArea(obj)
+        if area <= 0.2*totArea:  # 矩形太小
+            continue
+        # 计算轮廓周长
+        perimeter = cv2.arcLength(obj, True)
+        # 获取轮廓角点坐标
+        approx = cv2.approxPolyDP(
+            obj, 0.02*perimeter, True)
+        CornerNum = len(approx)  # 轮廓角点的数量
+        # 获取坐标值和宽度、高度
+        x, y, w, h = cv2.boundingRect(approx)
+        if CornerNum == 4:  # 是矩形
+            res.append([x, y, w, h])
+    if len(res) == 0:  # 找不到
+        return [0, 0, nw, nh]
+    # 取出最大的矩形
+    ans = max(res, key=lambda x: x[2]*x[3])  
+    return ans
+\end{lstlisting}
+
+效果如图所示：
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=120pt]{sample_graphSplit}
+    \caption{截取图片中的矩形}
+\end{figure}
+
+然而，根据实践经验，直接进行矩形探测会有如下问题：如果书籍封面太花，即图案等干扰因素较多(如本节第一张图片)。为了达到更好的效果，我们可以进行两次分割。第一次分割直接调用上述做法，对第一次分割后的图像，再进行灰度化、二值化后进行第二次分割，以期望达到更好的效果。
+
+如图所示(中图为第一次分割(找不到矩形)，右图为第二次分割)：
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=120pt]{sample_graphSplit2}
+    \caption{两次探测截取图片中的矩形}
+\end{figure}
 
 \section{实验结果及分析}
 \section{总结与体会}
@@ -319,6 +405,9 @@ def autoRotate(img):
 \section{参考文献}
 Otsu 算法解析
 %https://blog.csdn.net/a15779627836/article/details/124151125
+
+数字分割
+%https://www.cnblogs.com/skyfsm/p/8029668.html
 
 Canny边缘检测
 %https://blog.csdn.net/weixin_42272768/article/details/111244896
@@ -329,6 +418,15 @@ Hough变换详解
 
 图片旋转
 %https://blog.csdn.net/wyx100/article/details/80541726
+
+提取特定图片区域
+%https://blog.csdn.net/weixin_47365088/article/details/116566822
+
+形状识别
+%https://blog.csdn.net/LPYchengxuyuan/article/details/122003702?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-0-122003702-blog-124125975.pc_relevant_aa&spm=1001.2101.3001.4242.1&utm_relevant_index=3
+
+边缘检测
+%Suzuki, S. and Abe, K., TopologicalStructural Analysis of Digitized Binary Images by Border Following.CVGIP 30 1, pp32-46 (1985)
 
 \section{附录}
 \end{document}
