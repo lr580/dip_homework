@@ -399,6 +399,21 @@ def getMainRectangle(img):
     \caption{两次探测截取图片中的矩形}
 \end{figure}
 
+
+\subsection{字符识别}
+
+因为上文我们已经分割出了每个字符，所以我们只需要对每个字符分别与每个标准字符进行比较，看其与哪个字符相似度最高，就认为它是哪个字符。
+
+为了提高准确率，识别出不同的字体，我们考虑准备多套标准字符。下面展示了截取的三种不同的字体下的数字0-9和其他符号的图像的标准图像，从上到下分别是方正舒体、宋体、清松手写体。如图所示：
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=120pt]{standard_fonts}
+    \caption{标准字体}
+\end{figure}
+
+采用与上文字符分割一节类似的办法，对这三张图片预处理，得到每个数字。
+
 \section{实验结果及分析}
 \section{总结与体会}
 \section{致谢}

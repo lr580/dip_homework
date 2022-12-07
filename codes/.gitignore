@@ -6,3 +6,4 @@
 *.tiff
 *.pyc
 output/*
+!template/*

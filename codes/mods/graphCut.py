@@ -1,10 +1,10 @@
 import cv2
 from toGrey import toGrey
-from toBinary import toBinary, getThrestHold
-from preRotate import autoRotate, autoRotateC
-from stringSplit import plotSumAnalyse
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
+from toBinary import toBinary  # , getThrestHold
+# from preRotate import autoRotate, autoRotateC
+# from stringSplit import plotSumAnalyse
+# import matplotlib.image as mpimg
+# import matplotlib.pyplot as plt
 
 
 # 现象展示
@@ -17,7 +17,7 @@ plotSumAnalyse(img, False)
 '''
 
 
-#该函数暂时废弃
+# 该函数暂时废弃
 def getBetterRectImg(img):
     """给定二值化图像，返回其消除条形码内容后的矩形区域\n
     基于膨胀和腐蚀进行，但是两次使用的核不一样"""
@@ -165,7 +165,8 @@ def autoCut(img0, thr=220):
     img = cutImage(img)
     return img
 
-#使用示例
+
+# 使用示例
 '''
 img0 = cv2.imread('../../imgs/08.png')
 img = cutImage(img0)

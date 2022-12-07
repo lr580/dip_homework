@@ -2,7 +2,6 @@ import cv2
 from toGrey import toGrey
 from toBinary import toBinary, getThrestHold
 from stringSplit import *
-from math import tan
 
 # 倍增法+边缘检测+Hough直线检测 效果展示
 '''

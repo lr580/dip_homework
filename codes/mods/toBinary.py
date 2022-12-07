@@ -1,4 +1,5 @@
 import numpy as np
+import toGrey
 
 
 def getThrestHold(img):
@@ -27,6 +28,12 @@ def toBinary(img, x=200, ltx=0, gex=255):
     img2[img2 < x] = ltx
     img2[img2 >= x] = gex
     return img2
+
+
+def getBinary(img, x=200, ltx=0, gex=255):
+    '''先灰度化，再二值化'''
+    img = toGrey.toGrey(img)
+    return toBinary(img, x, ltx, gex)
 
 
 # 算法测试与展示
