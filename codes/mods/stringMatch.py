@@ -8,9 +8,9 @@ from stringSplit import splitNumbers
 def loadTemplates(path='../templates'):
     '''从文件夹路径返回标准字符模板(经过二值化)'''
     t = [dict() for i in range(3)]
-    for i in range(1):
+    for i in range(2):
         for j in strname:
-            name = '%d_%s.png' % (4, j)
+            name = '%d_%s.png' % (5+i, j)
             dest = os.path.join(path, name)
             t[i][j] = cv2.imread(dest)
             t[i][j] = getBinary(t[i][j])
@@ -29,25 +29,28 @@ def compare(target, std):
     return cv2.minMaxLoc(res)[1]  # 只要maxval
 
 
-def getNumber(src, fontid):
-    '''将一张图片与特定字体比较，取最大相似的字符作结果'''
+def getNumber(src):
+    '''将一张图片与全体模板比较，取最大相似的字符作结果'''
     maxv, maxchar = 0, '?'
-    for i in strname:
-        v = compare(src, tems[fontid][i])
-        if v > maxv:
-            maxv, maxchar = v, i
+    for fi in range(2):
+        for i in strname:
+            v = compare(src, tems[fi][i])
+            if v > maxv:
+                maxv, maxchar = v, i
+            # print('%s(%.2f)' % (i, v), end=' ')
+        # print()
     return maxchar
 
 
 def match(srcs):
     '''将分割图像列表与模板比较,返回结果'''
-    return [getNumber(i, 0) for i in srcs]
+    return [getNumber(i) for i in srcs]
 
 
 def getMatch(img):
     '''给定二值化图像，输出识别结果数组'''
     srcs = splitNumbers(img)
-    return [getNumber(i, 0) for i in srcs]
+    return [getNumber(i) for i in srcs]
 
 
 # 效果展示

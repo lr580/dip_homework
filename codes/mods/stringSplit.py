@@ -34,6 +34,8 @@ def getHoriAndVertSum(img):
     return [sumHori, sumVert]
 
 
+# 初版代码
+"""
 def getNumberLineRange(sums, low=0.25):
     '''输入向量,返回逆序寻找的第一个数字行'''
     lim = np.max(sums)*low  # 实际阈值
@@ -46,11 +48,13 @@ def getNumberLineRange(sums, low=0.25):
             left = i
             break
     return [max(0, left), max(0, right)]
+"""
 
 
-def getRanges(sums, low=0.08):
+def getRanges(sums, low=0.32):
     '''输入向量,返回顺序寻找的所有>=low的连续峰段'''
-    lim = np.max(sums)*low  # 实际阈值
+    lim = low*sums.mean()
+    print('low=', lim)
     ans, inLow = [], True
     left, right = -1, -1
     n = sums.shape[0]
@@ -61,6 +65,23 @@ def getRanges(sums, low=0.08):
             right, inLow = i, True
             ans.append([left, right])
     return ans
+
+
+def getNumberLineRange(sums, low=0.35):
+    '''输入向量,返回一个数字行的下标范围[l,r]'''
+    low = sums.mean()*low
+    rng = getRanges(sums)
+    # print('rng=', rng)
+    if len(rng) == 0:  # 图片有误
+        return [0, 0]
+    # 找到最长的段对应的下标
+    strip = max(rng, key=lambda x: x[1]-x[0])
+    sid = rng.index(strip)
+    if sid > 0:  # 上一段
+        return rng[sid-1]
+    if sid+1 < len(rng):  # 下一段
+        return rng[sid+1]
+    return [0, 0]  # 只有条形码
 
 
 def splitByVerts(img, lr):
@@ -94,6 +115,8 @@ saveImgs(imgs)
 '''
 
 
+# 初版算法
+"""
 def filtRanges(arr, low=0.3, maxDel=6):
     '''输入区间,返回经过初步筛选后的有效区间'''
     n = len(arr)
@@ -106,6 +129,27 @@ def filtRanges(arr, low=0.3, maxDel=6):
            if b[i][1] < lim}
     arr = [arr[i] for i in range(n) if i not in ban]
     return arr
+"""
+
+
+def filtRanges(img, arr, low=0.3, maxDel=6):
+    '''输入区间,返回经过初步筛选后的有效区间'''
+    res = []
+    h = img.shape[0]
+    for l, r in arr:
+        sub = img[:, l:r+1]
+        blacks = sub[sub == 0].size
+        lens = r-l+1
+        tot = h*lens
+        if blacks >= tot*0.7:  # 黑色太多
+            continue
+        sumH, sumV = getHoriAndVertSum(sub)
+        vrows = sumH[sumH > 0.15*h].size
+        if vrows < 0.4*h:  # 空白行太多
+            continue
+        # print(blacks, vrows, tot, lens, h)
+        res.append([l, r])
+    return res
 
 
 # 效果展示
@@ -127,9 +171,10 @@ def splitNumbers(img):
     '''输入一张二值化图像，返回其分割出来的字符子图列表'''
     sumHori, sumVert = getHoriAndVertSum(img)
     l, r = getNumberLineRange(sumHori)
+    # print('l,r=', l, r)
     img2 = img[l:r, :]
     sumHori2, sumVert2 = getHoriAndVertSum(img2)
-    rng = filtRanges(getRanges(sumVert2))
+    rng = filtRanges(img2, getRanges(sumVert2, 0.12))
     imgs = splitByVerts(img2, rng)
     return imgs
 
@@ -168,7 +213,8 @@ def plotSplit(img0):
     print(l, r)
     img2 = img[l:r, :]
     sumHori2, sumVert2 = getHoriAndVertSum(img2)
-    rng = filtRanges(getRanges(sumVert2))
+    # rng = filtRanges(getRanges(sumVert2))
+    rng = filtRanges(img2, getRanges(sumVert2))
     imgs = splitByVerts(img2, rng)
     print(len(imgs))
     saveImgs(imgs)

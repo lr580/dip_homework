@@ -17,14 +17,19 @@ def autoMatch(img):
     '''给定一张图片，输出其ISBN字符串结果\n'''
     img = autoRotateC(img)
     thr = getThrestHold(toGrey(img))
+    # thr = 20
     img1 = autoCut(img, thr)
     img2 = rotateImg(img1, 180)
     res1 = getMatch(img1)
     res2 = getMatch(img2)
+    # plotSumAnalyse(img1)
+    # plotSumAnalyse(img2)
+    # plotSplit(img1)
+    # plotSplit(img2)
     prints(res1)
     prints(res2)
 
 
 import cv2
-img = cv2.imread('../../imgs/09.png')
+img = cv2.imread('../../imgs/12.jpg')
 autoMatch(img)
