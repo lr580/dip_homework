@@ -32,20 +32,13 @@ def compare(target, std):
 def getNumber(src):
     '''将一张图片与全体模板比较，取最大相似的字符作结果'''
     maxv, maxchar = 0, '?'
-    for fi in range(2):
-        for i in strname:
+    for fi in range(2):  # fi是第几套字体
+        for i in strname:  # i是字符值
             v = compare(src, tems[fi][i])
             if v > maxv:
                 maxv, maxchar = v, i
-            # print('(%s %s %.2f)' % (fi, i, v), end=' ')
-        # print()
-    # print()
     return maxchar
 
-
-def match(srcs):
-    '''将分割图像列表与模板比较,返回结果'''
-    return [getNumber(i) for i in srcs]
 
 
 def getMatch(img):

@@ -1,3 +1,4 @@
+import cv2
 from saveImg import saveImgs
 import numpy as np
 import matplotlib.pyplot as plt
@@ -52,15 +53,17 @@ def getNumberLineRange(sums, low=0.25):
 
 
 def getRanges(sums, low=0.32):
-    '''输入向量,返回顺序寻找的所有>=low的连续峰段'''
+    '''输入向量,返回所有值>=low*均值的连续峰段'''
     lim = low*sums.mean()
-    # print('low=', lim)
-    ans, inLow = [], True
-    left, right = -1, -1
-    n = sums.shape[0]
+    ans = []  # 所有函数值>=lim的区间端点[l,r]
+    inLow = True  # 当前是否扫描到<lim的下标
+    left, right = -1, -1  # 临时变量
+    n = sums.shape[0]  # 总长
     for i in range(n):
+        # 进入符合条件的区间
         if sums[i] >= lim and inLow:
             left, inLow = i, False
+        # 退出符合条件的区间
         if sums[i] < lim and not inLow:
             right, inLow = i, True
             ans.append([left, right])
@@ -71,7 +74,6 @@ def getNumberLineRange(sums, low=0.35):
     '''输入向量,返回一个数字行的下标范围[l,r]'''
     low = sums.mean()*low
     rng = getRanges(sums)
-    # print('rng=', rng)
     if len(rng) == 0:  # 图片有误
         return [0, 0]
     # 找到最长的段对应的下标
@@ -132,7 +134,7 @@ def filtRanges(arr, low=0.3, maxDel=6):
 """
 
 
-def filtRanges(img, arr, low=0.3, maxDel=6):
+def filtRanges(img, arr):
     '''输入区间,返回经过初步筛选后的有效区间'''
     res = []
     h = img.shape[0]
@@ -147,9 +149,7 @@ def filtRanges(img, arr, low=0.3, maxDel=6):
         vrows = sumH[sumH > 0.05*h].size
         if vrows < 0.28*h:  # 空白行太多
             continue
-        # print(blacks, vrows, tot, lens, h)
         res.append([l, r])
-    # print(len(arr),len(res))
     return res
 
 
@@ -172,7 +172,6 @@ def splitNumbers(img):
     '''输入一张二值化图像，返回其分割出来的字符子图列表'''
     sumHori, sumVert = getHoriAndVertSum(img)
     l, r = getNumberLineRange(sumHori)
-    # print('l,r=', l, r)
     img2 = img[l:r, :]
     sumHori2, sumVert2 = getHoriAndVertSum(img2)
     rng = filtRanges(img2, getRanges(sumVert2, 0.12))
@@ -200,29 +199,47 @@ def plotSumAnalyse(img0, draw2Hori=True):
     plt.show()
 
 
-# import cv2
-# img = cv2.imread('../../imgs/10.png')
-# plotSumAnalyse(img)
-
-
 # 调试用
 def plotSplit(img0):
+    '''绘图(输出数字行和分割字符)'''
     img = toGrey(img0)
     img = toBinary(img, getThrestHold(img))
     sumHori, sumVert = getHoriAndVertSum(img)
     l, r = getNumberLineRange(sumHori)
-    print(l, r)
     img2 = img[l:r, :]
     sumHori2, sumVert2 = getHoriAndVertSum(img2)
-    # rng = filtRanges(getRanges(sumVert2))
+    # 可以注释掉下面代码，查看取消筛选的效果
+    # 换用这行代码：
+    # rng = getRanges(sumVert2)
     rng = filtRanges(img2, getRanges(sumVert2))
     imgs = splitByVerts(img2, rng)
-    print(len(imgs))
     saveImgs(imgs)
-    plt.subplot(121)
+    plt.subplot(211)
     plt.imshow(img, 'gray')
-    plt.subplot(122)
+    plt.subplot(212)
     plt.imshow(img2, 'gray')
     plt.show()
 
-# plotSplit(img)
+
+# 调试用
+def plotNumberLineAnalyse(img0):
+    '''绘图只输出数字行及其统计特征'''
+    img = getBinary(img0)
+    sumHori, sumVert = getHoriAndVertSum(img)
+    l, r = getNumberLineRange(sumHori)
+    img2 = img[l:r, :]
+    sumHori2, sumVert2 = getHoriAndVertSum(img2)
+    plt.subplot(211)
+    plt.imshow(img2, 'gray')
+    plt.subplot(212)
+    plt.plot(sumVert2)
+    plt.show()
+
+
+# 效果展示
+'''
+img = cv2.imread('../../imgs/02.png')
+plotSumAnalyse(img)
+plotSplit(img)
+plotNumberLineAnalyse(img)
+'''

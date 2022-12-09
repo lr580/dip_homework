@@ -44,10 +44,10 @@ def filtRes(m):
     return r
 
 
-def getChecksum(m, ISBNlen):
+def getChecksum(m):
     '''输入校验码序列,返回校验码'''
     s = 0
-    if ISBNlen == 10:
+    if len(m) == 10:
         w = [i for i in range(10, 1, -1)]
         for i in range(9):
             s += w[i]*int(m[i])
@@ -66,31 +66,11 @@ def getChecksum(m, ISBNlen):
 
 def checkISBN(m):
     '''输入初筛后的校验码序列,校验它是否正确'''
-    s = 0
     if m[:-1].count('X'):
         return False  # 只有最后位可能是X
-    if len(m) == 10:
-        # 旧版校验码计算规则
-        w = [i for i in range(10, 1, -1)]
-        for i in range(9):
-            s += w[i]*int(m[i])
-        s %= 11
-        if s < 10 and int(m[-1]) == s:
-            return True
-        if s == 10 and m[-1] == 'X':
-            return True
-        return False
-    elif len(m) == 13:
-        # 新版校验码计算规则
-        if m[-1] == 'X':  # 新版没有X
-            return False
-        for i in range(12):
-            # 权重奇数位是1,偶数位是3
-            w = 3 if i % 2 else 1
-            s += w*int(m[i])
-        s = (10-s % 10) % 10
-        return s == int(m[-1])
-    return False  # ISBN码只能是10位或13位
+    if len(m) not in (10, 13):
+        return False  # 长度不对
+    return m[-1] == getChecksum(m)
 
 # 测试
 # checkISBN([i for i in '9787222070370'])
@@ -99,16 +79,29 @@ def checkISBN(m):
 def adjudgeByChecksum(m):
     if len(m) not in (10, 13):
         return m  # 改不了没救了
+    if m[:-1].count('X'):
+        return m  # 改不了没救了
     if not checkISBN(m):
-        m[-1] = getChecksum(m, len(m))
+        m[-1] = getChecksum(m)
     return m
+
+
+def average(m):
+    '''返回校验码序列的平均值'''
+    a = [int(i) for i in m if i != 'X']
+    return sum(a)/max(1, len(a))
 
 
 def betterMatch(m1, m2):
     '''给定两个匹配结果，选择最优的'''
     d1, d2 = filtRes(m1), filtRes(m2)
     r1, r2 = checkISBN(d1), checkISBN(d2)
-    # 如果r1,r2都对,那表明r1=r2
+    # 如果r1,r2都对,取平均数最接近4.5的
+    if r1 and r2:
+        a1, a2 = average(d1), average(d2)
+        if abs(a1-4.5) < abs(a2-4.5):
+            return d1
+        return d2
     if r1:
         return d1
     if r2:
@@ -132,11 +125,12 @@ def matchFlip(img):
     img2 = rotateImg(img1, 180)
     res1 = getMatch(img1)
     res2 = getMatch(img2)
+    return betterMatch(res1, res2)
+    # 下面调试用：
     # plotSumAnalyse(img1)
     # plotSumAnalyse(img2)
     # plotSplit(img1)
     # plotSplit(img2)
-    return betterMatch(res1, res2)
 
 
 def iterMatch(img0):
@@ -173,8 +167,9 @@ def Match(img0, thr):
 
 # 效果展示
 ''''''
-img = cv2.imread('../../imgs/02.png')
+img = cv2.imread('../../imgs/12.jpg')
 # print(img.shape)
 # prints(autoMatch(img))
 prints(iterMatch(img))
 # prints(Match(img, 125))
+
