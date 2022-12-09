@@ -7,7 +7,7 @@ from stringSplit import *
 # from saveImg import saveImgs
 
 # strname = [i for i in '0123456789_-XISBN']
-strname = [i for i in '0123456789XISBN']
+strname = [i for i in '0123456789XISBN-']
 
 
 def preDealTemplate(fontIndex):

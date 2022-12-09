@@ -37,8 +37,9 @@ def getNumber(src):
             v = compare(src, tems[fi][i])
             if v > maxv:
                 maxv, maxchar = v, i
-            # print('%s(%.2f)' % (i, v), end=' ')
+            # print('(%s %s %.2f)' % (fi, i, v), end=' ')
         # print()
+    # print()
     return maxchar
 
 

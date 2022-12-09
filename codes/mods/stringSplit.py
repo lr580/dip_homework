@@ -54,7 +54,7 @@ def getNumberLineRange(sums, low=0.25):
 def getRanges(sums, low=0.32):
     '''输入向量,返回顺序寻找的所有>=low的连续峰段'''
     lim = low*sums.mean()
-    print('low=', lim)
+    # print('low=', lim)
     ans, inLow = [], True
     left, right = -1, -1
     n = sums.shape[0]
@@ -144,11 +144,12 @@ def filtRanges(img, arr, low=0.3, maxDel=6):
         if blacks >= tot*0.7:  # 黑色太多
             continue
         sumH, sumV = getHoriAndVertSum(sub)
-        vrows = sumH[sumH > 0.15*h].size
-        if vrows < 0.4*h:  # 空白行太多
+        vrows = sumH[sumH > 0.05*h].size
+        if vrows < 0.28*h:  # 空白行太多
             continue
         # print(blacks, vrows, tot, lens, h)
         res.append([l, r])
+    # print(len(arr),len(res))
     return res
 
 
