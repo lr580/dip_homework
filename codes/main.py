@@ -2,7 +2,7 @@
 from tkinter import *
 from tkinter.filedialog import *
 from tkinter.messagebox import *
-from PIL import ImageTk
+from PIL import ImageTk, Image
 import os
 import cv2
 from autoMatch import iterMatch
@@ -23,7 +23,13 @@ def openImage():
     path = askopenfilename()
     if os.path.exists(path):
         img = cv2.imread(path)
-        imgShow = ImageTk.PhotoImage(file=path)
+        #为了不让窗口特别大，缩放一下
+        img0 = Image.open(path)
+        h, w = img0.size
+        sh, sw = 400/h, 600/w
+        s = min(sw, sh, 1)
+        img0 = img0.resize((int(h*s), int(w*s)), Image.Resampling.BICUBIC)
+        imgShow = ImageTk.PhotoImage(img0)
         imgLabel.config(image=imgShow)
         # 防止临时变量消亡
         imgLabel.image = imgShow
@@ -48,6 +54,7 @@ def matchImage():
 def clipRes():
     # 去掉"识别结果:"五个字符
     res = resLabel['text'][5:]
+    root.clipboard_clear()
     root.clipboard_append(res)
 
 

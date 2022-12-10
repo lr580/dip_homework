@@ -44,9 +44,10 @@
     \item numpy==1.23.4
     \item cv==1.0.0
     \item matplotlib==3.6.2
+    \item Pillow==9.3.0
 \end{itemize}
 
-\textit{如果想要查看所有依赖库，请在项目根目录下输入 pip freeze。 }
+\textit{如果想要查看所有依赖库，请在项目根目录下输入 pip freeze。其中 Pillow 库是为了用 ImageTk 在窗口化显示内容，与核心逻辑无关。}
 
 \textbf{开发工具:}%不用加多余的\\
 \begin{description}
@@ -54,7 +55,7 @@
     \item[集成开发环境] Visual Studio Code 1.73.1
     \item[文档编写工具] TeXworks 0.6.6
     \item[编程语言] Python 3.10.6
-          % \item 版本管理工具 git 2.29.0
+    % \item 版本管理工具 git 2.29.0
     \item[编码格式] UTF8
 \end{description}
 
@@ -754,6 +755,15 @@ def iterMatch(img0):
     return adjudgeByChecksum(ans)
 \end{lstlisting}
 
+在窗口化程序中调用上述接口，效果如下：
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=120pt]{sample_stdout}
+    \caption{识别ISBN号的最终结果}
+\end{figure}
+
+可以发现，准确地识别了所有的 ISBN 数字，且运行速度可以接受(在本机运行大约 1s 能出结果)。
+
 \begin{comment}
 下面展示了截取的三种不同的字体下的数字0-9和其他符号的图像的标准图像，从上到下分别是方正舒体、宋体、清松手写体。如图所示：
 
@@ -767,6 +777,43 @@ def iterMatch(img0):
 \end{comment}
 
 \section{实验结果及分析}
+\subsection{实验结果}
+
+下图是所有的测试用例：
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=120pt]{test_raw}
+    \caption{测试用例}
+\end{figure}
+
+下面是这些用例的输出结果\textit{(对原图人眼难观察的，附上了便于人眼观察的结果，但该结果不会作为输入放到程序，程序处理的是原图)}：
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=150pt]{test_01}\quad
+    \includegraphics[height=150pt]{test_02}\\
+    \includegraphics[height=150pt]{test_03}\quad
+    \includegraphics[height=150pt]{test_04}\\
+    \includegraphics[height=150pt]{test_05}\quad
+    \includegraphics[height=150pt]{test_06}
+    \caption{测试结果}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=150pt]{test_07}\quad
+    \includegraphics[height=150pt]{test_08}\\
+    \includegraphics[height=150pt]{test_09}\quad
+    \includegraphics[height=150pt]{test_10}\\
+    \includegraphics[height=150pt]{test_11}\quad
+    \includegraphics[height=150pt]{test_12}
+    \caption{测试结果}
+\end{figure}
+
+
+可以看到，
+
+
 \subsection{不同算法比较}
 
 \subsubsection{二值化}
