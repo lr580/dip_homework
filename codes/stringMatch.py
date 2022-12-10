@@ -17,7 +17,7 @@ def loadTemplates(path='../templates'):
     return t
 
 
-tems = loadTemplates(r'D:\_lr580\program\practice\cv_homework\codes\template')
+tems = loadTemplates('template')
 
 
 def compare(target, std):
@@ -38,7 +38,6 @@ def getNumber(src):
             if v > maxv:
                 maxv, maxchar = v, i
     return maxchar
-
 
 
 def getMatch(img):

@@ -29,7 +29,7 @@
 \tableofcontents
 \newpage
 \section{概述}
-\noindent
+
 \textbf{题目:}图书ISBN号字符识别
 
 \textbf{设计目的:}通过实现对ISBN号的字符识别，以学习掌握数字图像处理的基本知识与技能。
@@ -106,8 +106,10 @@
 \subsection{灰度化}
 根据课件(第11章-P38页-4彩色平衡)内容可知，彩色图像数字化后，景物颜色会偏移真实颜色，导致三基色不平衡。这里采用白平衡法计算灰度，即使用公式：%不需要\\
 \[I(x,y)=0.299\cdot f_R(x,y)+0.587\cdot f_G(x,y)+0.114\cdot f_B(x,y)\] %不需要\\
+
 但是如果直接使用Python迭代来处理上述过程，非常缓慢。所以考虑用\textbf{矩阵运算优化}。我们知道，向量内积的计算结果是实数，故有：
 \[(R,G,B)\cdot(0.299,0.587,0.114)=0.299R+0.587G+0.114B\]
+
 因此，考虑用向量内积，直接调用底层依托 C++ 实现的 numpy 的向量运算 dot 函数，一来 C++ 比 Python 快，二来矩阵运算比迭代快，这样能起到不小的常数优化作用。在下文的其他具体实现里也会反复用到类似的思路。因此，核心代码如下：
 \begin{lstlisting}[language=python]
 import numpy as np
@@ -293,7 +295,7 @@ def getNumberLineRange(sums, low=0.35):
 
 可以发现，分割出来的内容里含有无关的元素，包括 ISBN 四个字符和短横线 -。对复杂的图像，可能还有一些噪声、误点等。考虑如何初步筛除这些内容。
 
-关于图像去噪，可以用滤波器等方法先做预处理。对短横线，不难发现其统计特征是，该字符只有少数行有黑点，大埔分行没有黑点，不妨直接将大部分行基本是空白的字符给去除，这样可以把短横线和一些误点去除。还可能有一些大面积污点，其特征是几乎整个区域都是黑点，我们可以把这样的也去除。对 ISBN 四个字符，考虑在后续模板匹配时去除。
+关于图像去噪，可以用滤波器等方法先做预处理。对短横线，不难发现其统计特征是，该字符只有少数行有黑点，大部分行没有黑点，不妨直接将大部分行基本是空白的字符给去除，这样可以把短横线和一些误点去除。还可能有一些大面积污点，其特征是几乎整个区域都是黑点，我们可以把这样的也去除。对 ISBN 四个字符，考虑在后续模板匹配时去除。
 
 核心代码如下：
 \begin{lstlisting}[language=python]
@@ -367,7 +369,7 @@ def getLines(img):
             or len(lines) <= 5:
             lim = int(lim*0.9)
             continue#找不到/太少就不断缩小要求
-        break
+        return lines
 \end{lstlisting}
 
 效果如图所示：
@@ -467,9 +469,6 @@ def autoRotate(img):
 不妨定义一个横向的长条矩形，如 $(n\times 1)$ 矩形进行膨胀；然后用 $(1\times m)$ 的纵向矩形进行腐蚀，去掉纵向的残留条形码等内容。考虑到膨胀与腐蚀操作的本质，我们认为 $n,m$ 的选取可以与具体图片的大小无关。这里使用的并非闭运算，因为前后不是同一个结构元素。根据经验，不妨设 $n=20,m=15$，实践表明，能取得较优的效果。
 
 代码如下：
-这是一段多行注释。
-它可以包含任意多行文本。
-注释内容不会在编译后的文档中显示。
 \end{comment}
 
 检测一张图像中出现的矩形区域，可以采用 Suzuki, S. and Abe, K. 在论文(\textit{见参考文献})中提出的算法。调用相关算法后，我们能够得到图像上的所有轮廓。根据本题的特殊性，我们只需要选取其中的所有矩形轮廓。特别地，有时候如果轮廓检测失败，可能会得到许多很小的轮廓，不妨设置一个阈值如 $20\%$，所有面积小于原图像的 $20\%$ 的矩形全部忽略掉。然后，我们取出最大的矩形，作为检测的目标。
@@ -653,7 +652,7 @@ def filtRes(m):
         \STATE 求 $d_1,d_2$ 的 ISBN 校验码是否合法
         \IF{二者都合法}
         \STATE 求 $d_1,d_2$ 的平均数
-        \RETURN 平均数较小的一方
+        \RETURN 平均数较与 $4.5$ 更接近的一方
         \ELSE
             \IF{其中一个合法}
             \RETURN 合法的一方
@@ -879,9 +878,9 @@ def getNumberLineRange(sumHori, low=0.25):
     \item \href{https://blog.csdn.net/weixin_47365088/article/details/116566822}{提取特定图片区域}
     \item \href{https://blog.csdn.net/LPYchengxuyuan/article/details/122003702?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-0-122003702-blog-124125975.pc_relevant_aa&spm=1001.2101.3001.4242.1&utm_relevant_index=3}{形状识别}
     \item 边缘检测 Suzuki, S. and Abe, K., TopologicalStructural Analysis of Digitized Binary Images by Border Following.CVGIP 30 1, pp32-46 (1985)
+    \item 数字图像处理基础课程的全部课件 梁艳老师
 \end{enumerate}
 
 \section{附录}
-% \subsection{算法比较的详细代码}
-% \subsubsection{中位数+邻近行分析}
+
 \end{document}

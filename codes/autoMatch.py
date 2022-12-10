@@ -4,10 +4,13 @@ from graphCut import *
 from stringMatch import *
 
 
-def prints(res):
-    '''给定一个字符数组,以字符串形式输出'''
-    [print(i, end='') for i in res]
-    print()
+
+def toString(res):
+    '''给定一个字符数组,转换为字符串形式'''
+    s = ''
+    for i in res:
+        s += i
+    return s
 
 
 def reshape(img, mw=1000, mh=1000):
@@ -141,9 +144,10 @@ def iterMatch(img0):
     for thr in range(5, 255, 10):
         img1 = autoCut(img, thr)
         res = matchFlip(img1)
-        print(thr, res)
         ans = betterMatch(ans, res)
-    return adjudgeByChecksum(ans)
+        # print(thr, toString(res),toString(ans))
+    ans = adjudgeByChecksum(ans)
+    return toString(ans)
 
 
 def autoMatch(img0):
@@ -153,7 +157,8 @@ def autoMatch(img0):
     thr = getThrestHold(toGrey(img))
     img = autoCut(img, thr)
     res = matchFlip(img)
-    return adjudgeByChecksum(res)
+    res = adjudgeByChecksum(res)
+    return toString(res)
 
 
 def Match(img0, thr):
@@ -162,14 +167,15 @@ def Match(img0, thr):
     img = preDeal(img0)
     img = autoCut(img, thr)
     res = matchFlip(img)
-    return adjudgeByChecksum(res)
+    res = adjudgeByChecksum(res)
+    return toString(res)
 
 
 # 效果展示
-''''''
-img = cv2.imread('../../imgs/12.jpg')
+'''
+# img = cv2.imread('../imgs/12.jpg')
 # print(img.shape)
 # prints(autoMatch(img))
-prints(iterMatch(img))
+# print(iterMatch(img))
 # prints(Match(img, 125))
-
+'''
