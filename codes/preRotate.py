@@ -1,10 +1,11 @@
 import cv2
 from toGrey import toGrey
 from toBinary import toBinary, getThrestHold
-from stringSplit import *
+import numpy as np
 
 # 倍增法+边缘检测+Hough直线检测 效果展示
 '''
+from stringSplit import *
 img = cv2.imread('../../imgs/07.png')
 img = toGrey(img)
 img = toBinary(img, getThrestHold(img))

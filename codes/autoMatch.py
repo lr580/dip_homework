@@ -30,7 +30,7 @@ def preDeal(img0):
 
 
 def filtRes(m):
-    '''输入匹配结果，对结果进行筛除和修正'''
+    '''输入匹配结果，对结果进行筛除和修正并返回'''
     r = []
     hasB = False  # 是否出现过B
     for i in m:
@@ -48,7 +48,7 @@ def filtRes(m):
 
 
 def getChecksum(m):
-    '''输入校验码序列,返回校验码'''
+    '''输入ISBN码序列,返回校验码'''
     s = 0
     if len(m) == 10:
         w = [i for i in range(10, 1, -1)]
@@ -80,6 +80,7 @@ def checkISBN(m):
 
 
 def adjudgeByChecksum(m):
+    '''给定ISBN码序列,若不合校验码将其根据校验码校正并返回'''
     if len(m) not in (10, 13):
         return m  # 改不了没救了
     if m[:-1].count('X'):
@@ -123,7 +124,7 @@ def betterMatch(m1, m2):
 
 
 def matchFlip(img):
-    '''输出一张图片,将其正反都匹配一次取最优'''
+    '''给定一张图片,将其正反都匹配一次取最优返回'''
     img1 = img.copy()
     img2 = rotateImg(img1, 180)
     res1 = getMatch(img1)
@@ -138,7 +139,7 @@ def matchFlip(img):
 
 def iterMatch(img0):
     '''给定一张图片,枚举二值化阈值取最好结果\n
-    输出其ISBN字符串结果(以列表形式)'''
+    输出其ISBN字符串结果'''
     img = preDeal(img0)
     ans = []  # 当前最优结果
     for thr in range(5, 255, 10):

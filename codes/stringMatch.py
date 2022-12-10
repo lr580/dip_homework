@@ -5,7 +5,7 @@ from toBinary import getBinary
 from stringSplit import splitNumbers
 
 
-def loadTemplates(path='../templates'):
+def loadTemplates(path='templates'):
     '''从文件夹路径返回标准字符模板(经过二值化)'''
     t = [dict() for i in range(3)]
     for i in range(2):

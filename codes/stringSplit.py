@@ -1,4 +1,4 @@
-import cv2
+# import cv2
 from saveImg import saveImgs
 import numpy as np
 import matplotlib.pyplot as plt
@@ -135,7 +135,7 @@ def filtRanges(arr, low=0.3, maxDel=6):
 
 
 def filtRanges(img, arr):
-    '''输入区间,返回经过初步筛选后的有效区间'''
+    '''输入区间列表,返回经过初步筛选后的有效区间列表'''
     res = []
     h = img.shape[0]
     for l, r in arr:

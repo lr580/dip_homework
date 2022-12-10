@@ -1,4 +1,4 @@
-# 窗口化程序部分,核心逻辑代码全部在mods\下
+# 窗口化程序部分,核心逻辑代码全部在其他代码文件
 from tkinter import *
 from tkinter.filedialog import *
 from tkinter.messagebox import *
@@ -7,6 +7,7 @@ import os
 import cv2
 from autoMatch import iterMatch
 import threading
+import numpy as np
 
 root = Tk()
 root.title('图书ISBN号字符识别')
@@ -22,8 +23,9 @@ def openImage():
     global img
     path = askopenfilename()
     if os.path.exists(path):
-        img = cv2.imread(path)
-        #为了不让窗口特别大，缩放一下
+        # 读取带中文路径的图片，不能直接imread
+        img = cv2.imdecode(np.fromfile(path, dtype=np.uint8), cv2.IMREAD_COLOR)
+        # 为了不让窗口特别大，缩放一下
         img0 = Image.open(path)
         h, w = img0.size
         sh, sw = 400/h, 600/w

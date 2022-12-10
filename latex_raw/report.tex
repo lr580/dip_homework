@@ -55,7 +55,7 @@
     \item[集成开发环境] Visual Studio Code 1.73.1
     \item[文档编写工具] TeXworks 0.6.6
     \item[编程语言] Python 3.10.6
-    % \item 版本管理工具 git 2.29.0
+    \item[版本管理工具] git 2.29.0
     \item[编码格式] UTF8
 \end{description}
 
@@ -92,9 +92,9 @@
 
 \begin{description}
     \item[打开图片] 通过窗口化程序让用户在资源管理器中选择一张图片打开。支持多种格式。
-    \item[自动旋转] 基于Hough算法直线检测探测条形码中的条形直线的斜率，以此为基准将条形码旋转至垂直。采用倍增的思路快速枚举直线长度阈值参数。
+    \item[自动旋转] 基于Hough算法直线检测探测条形码中的条形直线的斜率，以此为基准将条形码旋转至垂直。\textbf{算法改进:}采用倍增的思路快速枚举直线长度阈值参数。
     \item[缩放图片] 过大的图片不会增加识别准确率。为了提高运行速度，将过大的图片等比缩小。
-    \item[裁切图片] 先进行高斯模糊平滑处理，然后用Canny算法做边缘检测，然后求出轮廓上的所有矩形，筛除不合理矩形后取出最大的矩形区域作为条形码所在区域。为了提高准确率，先在彩色图像上处理一次，再二值化后处理第二次，共裁切两次。
+    \item[裁切图片] 先进行高斯模糊平滑处理，然后用Canny算法做边缘检测，然后求出轮廓上的所有矩形，筛除不合理矩形后取出最大的矩形区域作为条形码所在区域。\textbf{算法改进:}为了提高准确率，先在彩色图像上处理一次，再二值化后处理第二次，共裁切两次。
     \item[分割字符] 基于行列特征，找出条形码所在行区间，往上一个区间为ISBN号所在区间，对该区间按列特征分割出每个字符，并作初步筛除。
     \item[模板匹配] 事先准备多套字体的每个字符模板。将待匹配字符缩放和归一化，然后求相关系数，将系数最大的结果作为识别字符值。
     \item[优化调整] 枚举二值化阈值，对不同二值化阈值下不同正反旋转的图片的若干结果找出最符合的一个输出。基于ISBN校验码、统计规律等多因素进行筛选与调整结果。 
@@ -458,20 +458,6 @@ def autoRotate(img):
     \caption{条形码外的封面内容干扰统计}
 \end{figure}
 
-\begin{comment}
-根据课件(第12章-形态学图像处理)可知，数学形态学图像处理的基本思想是：用具有一定形态的结构元素(如一定大小的矩形、圆或菱形等)探测目标图像，能达到图像分析与识别的目的。因此，考虑使用形态学方法进行处理并提取出有效的子图区域。
-
-观察可知，ISBN 的有效区域总是一个白色的矩形为背景的。我们可以考虑找到这个矩形区域并将其提取出来。
-
-根据课件内容可知，闭运算(先膨胀再腐蚀)能磨光物体内边界，开运算(先腐蚀再膨胀)能磨光图像外边界。
-
-根据类似的经验，我们可以先膨胀图像，将条形码矩形的内部内容去掉，用背景色替代，再进行一次腐蚀去噪。
-
-不妨定义一个横向的长条矩形，如 $(n\times 1)$ 矩形进行膨胀；然后用 $(1\times m)$ 的纵向矩形进行腐蚀，去掉纵向的残留条形码等内容。考虑到膨胀与腐蚀操作的本质，我们认为 $n,m$ 的选取可以与具体图片的大小无关。这里使用的并非闭运算，因为前后不是同一个结构元素。根据经验，不妨设 $n=20,m=15$，实践表明，能取得较优的效果。
-
-代码如下：
-\end{comment}
-
 检测一张图像中出现的矩形区域，可以采用 Suzuki, S. and Abe, K. 在论文(\textit{见参考文献})中提出的算法。调用相关算法后，我们能够得到图像上的所有轮廓。根据本题的特殊性，我们只需要选取其中的所有矩形轮廓。特别地，有时候如果轮廓检测失败，可能会得到许多很小的轮廓，不妨设置一个阈值如 $20\%$，所有面积小于原图像的 $20\%$ 的矩形全部忽略掉。然后，我们取出最大的矩形，作为检测的目标。
 
 为了得到更准确的结果，我们需要实现进行预处理，例如可以先进行高斯模糊，然后再用 Canny 算法做边缘检测，以边缘检测结果的二值化图像开始提取轮廓。
@@ -764,18 +750,6 @@ def iterMatch(img0):
 
 可以发现，准确地识别了所有的 ISBN 数字，且运行速度可以接受(在本机运行大约 1s 能出结果)。
 
-\begin{comment}
-下面展示了截取的三种不同的字体下的数字0-9和其他符号的图像的标准图像，从上到下分别是方正舒体、宋体、清松手写体。如图所示：
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[height=120pt]{standard_fonts}
-    \caption{标准字体}
-\end{figure}
-
-采用与上文字符分割一节类似的办法，对这三张图片预处理，得到每个数字。
-\end{comment}
-
 \section{实验结果及分析}
 \subsection{实验结果}
 
@@ -786,6 +760,8 @@ def iterMatch(img0):
     \includegraphics[height=120pt]{test_raw}
     \caption{测试用例}
 \end{figure}
+
+可以看到，这些数据具有一定的挑战性。因为除了最基本的情况(如第 $1$ 个样例)外，其他样例含有噪声(图片的阴影、照片的污点等)、模糊(拍摄不清、像素较低等)、不完整(如只有上半部分/下半部分)、不同角度的旋转，识别难度较高。
 
 下面是这些用例的输出结果\textit{(对原图人眼难观察的，附上了便于人眼观察的结果，但该结果不会作为输入放到程序，程序处理的是原图)}：
 
@@ -810,9 +786,11 @@ def iterMatch(img0):
     \caption{测试结果}
 \end{figure}
 
+可以看到，上述的 $12$ 个测试用例都准确地得到了正确结果。用例中包含了各种不同的角度旋转、包含背景干扰(如第 $3,6$ 个样例)、包含不完整的条形码(如第 $9,10$ 个样例)，可以说明该程序可以在较为复杂的情况下能够准确地得到识别结果，健壮性良好。
 
-可以看到，
+此外，上述图片中的格式支持多样，包括 jpg, png, tif。而且支持不同大小尺寸的图片，无论是中小图片还是相机拍摄的分辨率很高的图像，都能识别。执行速度可以接受，通常而言运算的最长用时不会超过 $5$ 秒，平均能在 $0.5\sim2$ 秒内得到结果。
 
+综上所述，我们可以认为该程序取得了可观的成果，能够应用在实践中解决生产生活问题。
 
 \subsection{不同算法比较}
 
@@ -858,7 +836,24 @@ def getThrestHold(img):
 
 这种算法的理论是很好的，但是在实践中我们发现了如下问题：如果要识别的图片除了 ISBN 区域外，还有较大片的封面内容，那么这些封面内容有可能要么颜色过浅、要么颜色过剩，他们都会干扰方差，从而使得二值化效果很差，不利于后续的图片切割等处理。
 
-基于这个缺陷，我们在上文中最终替换了算法，最终版本如上文所示。
+基于这个缺陷，我们在上文中最终替换了算法，最终版本如上文所示。改进后显著提升了准确率。
+
+\subsubsection{图片分割}
+最开始的思路是在二值化下先做形态学预处理再进行矩形识别。具体如下：
+
+根据课件(第12章-形态学图像处理)可知，数学形态学图像处理的基本思想是：用具有一定形态的结构元素(如一定大小的矩形、圆或菱形等)探测目标图像，能达到图像分析与识别的目的。因此，考虑使用形态学方法进行处理并提取出有效的子图区域。
+
+观察可知，ISBN 的有效区域总是一个白色的矩形为背景的。我们可以考虑找到这个矩形区域并将其提取出来。
+
+根据课件内容可知，闭运算(先膨胀再腐蚀)能磨光物体内边界，开运算(先腐蚀再膨胀)能磨光图像外边界。
+
+根据类似的经验，我们可以先膨胀图像，将条形码矩形的内部内容去掉，用背景色替代，再进行一次腐蚀去噪。
+
+之后定义一个横向的长条矩形，如 $(n\times 1)$ 矩形进行膨胀；然后用 $(1\times m)$ 的纵向矩形进行腐蚀，去掉纵向的残留条形码等内容。考虑到膨胀与腐蚀操作的本质，我们认为 $n,m$ 的选取可以与具体图片的大小无关。这里使用的并非闭运算，因为前后不是同一个结构元素。根据经验，设 $n=20,m=15$。
+
+在实践过程中，发现效果不理想，一个是膨胀会将背景中的干扰元素进行放大化，加剧其的干扰，二是腐蚀效果不佳，无法良好去噪。我们发现其更多时候甚至起到了负面的作用，即如果不进行形态学预处理，对矩形框的识别率反而更高。
+
+因此，在最终实现中，我们没有采用形态学方法，而是采用了两次识别的方法。
 
 \subsubsection{字符分割}
 在初版设计中，我采用了如下的思路分割行：
@@ -890,7 +885,7 @@ def getNumberLineRange(sumHori, low=0.25):
 
 四、虽然下面的数字行没有 ISBN 字符和横线，但是其与条形码过于接近，很容易被条形码干扰，特别是图片拍摄条件不良时，或者条形码与其间距太近时，又有轻微旋转干扰的话，可能很难分割出来。
 
-基于这些缺陷，我们在上文中最终改进了算法。最终版本如上文所示。
+基于这些缺陷，我们在上文中最终改进了算法。最终版本如上文所示。改进后显著提升了准确率。
 
 \subsubsection{字符识别}
 在初版设计中，我使用了方正舒体、宋体、清松手写体。如图所示：
@@ -901,14 +896,76 @@ def getNumberLineRange(sumHori, low=0.25):
     \caption{标准字体}
 \end{figure}
 
-将其进行字符分割，得到标准模板。然而，其效果并不好，连最简单最规范的 ISBN 图片都无法识别。
+将其进行字符分割，得到标准模板。然而，其效果并不好，连最简单最规范的 ISBN 图片都无法识别。我们认为原因有两个：一个是这些字体并非是条形码常用字体，与实际环境的差异较大，不管是字形还是长宽比还是其他特征差异都较大；第二个是在预处理这些字体时，上下左右留出的空白空间较多，这导致做模板匹配时经常会失配。
 
+基于这些缺陷，我们在上文中最终改进了算法。最终版本如上文所示。改进后显著提升了准确率。改进后显著提升了准确率。
 
 \section{总结与体会}
+\subsection{归纳和总结}
+完成该项目是一个艰辛的过程。根据做项目过程的 git 版本记录\textit{(为了防止项目意外丢失，我使用了 git 进行备份工作)}可知，我从 2022 年 12 月 5 日开始做本项目，直到 12 月 10 日才完成全部工作，期间的每一天除了上课时间都在从早到晚做项目。如图所示：
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[height=90pt]{working_log}
+    \caption{项目完成过程的不完整记录}
+\end{figure}
+
+在这期间遇到了许多的艰难险阻，也一一进行了解决。遇到的技术难点如下：
+
+一、二值化的阈值难以选取，采用 Otsu 等自适应算法计算阈值的实践效果不理想。
+
+解决办法：考虑到灰度取值很少，可以等间距枚举阈值，对不同阈值都计算一次 ISBN 取最优。这种思路虽然朴素但很有效，也证明了简单的办法未必就是坏办法。\textit{(事实上Otsu算法的实现也是枚举了 $255$ 次灰度)。}
+
+二、将图片自动旋转到数字行水平时，因图片大小有差异，使用 Hough 算法直线检测时受长宽影响大。
+
+解决办法：进行直线检测时快速枚举直线长度阈值。类比算法里的二分/倍增法，我创造性地采用了倍数缩减的思路，一开始先给定很大的阈值，然后不断乘以一个 $< 1$ 的系数让其成比例缩小，直到找到直线或小到一定程度后停止。这样一来时间复杂度不会特别高，二来健壮性良好，解决了尺寸差异问题。
+
+三、去除封面背景，识别图片中的条形码矩形框时识别效果差。
+
+解决办法：一开始是打算先二值化，然后用形态学办法膨胀腐蚀，之后再做处理。然而发现这么做效果太差。因此，后来经过尝试，转而采用了先高斯模糊平滑去噪，再然后用 Canny 算子提取图像边界，之后再检测边界中的所有矩形。然而效果还是不理想。于是，我创造性地采用了两次处理的办法，即先对彩色图像进行一次上述方法分割，如果分割不出来，再在上文给定的枚举的二值化阈值下做二值化，然后再次分割。实践表明效果可观。
+
+四、模板匹配的准确率很低，对一些图片很难识别出字符。
+
+解决办法：条形码的字体并非是固定一套的，因此我准备了两套不同的字体，这样适应性更加。此外，我还进行了一系列比较复杂的人工优化过程，包括预筛选、校验、利用统计规律等方法，提高识别的准确率，取得了较为良好的结果。
+
+当然，遇到的问题不止这些，因篇幅有限不再一一赘述。
+
+综合来说，本项目运用了多种不同的数字图像技术，包括灰度化、二值化、直线检测、平滑、边缘检测、矩形检测、旋转、缩放、归一化、字符元素分割、基于模板匹配的字符元素识别等。项目综合性较强，实现难度较高，且运用了较新的技术，对现有技术进行了改进(如倍增法和二次探测)。
+
+因为在最终测试中程序表现良好，故该项目有应用到实践中的潜质。
+
+\subsection{不足与改进建议}
+该项目目前仍然存在一些瑕疵，下面扼要地提出主要的问题及其对应的参考改进措施。
+
+一、程序执行效率偏低，运行时间略久。
+
+改进建议：可以使用 C++ 语言重写项目。这是因为 C++ 代码比 Python 代码运行速度要明显快。且 C++ 也有 OpenCV，可以轻松迁移本项目的代码。
+
+二、对复杂图像的条形码区域分割与字符识别准确率不理想。
+
+改进建议：不妨采用机器学习办法进行条形码区域识别与字符匹配。可以训练一个神经网络，或调用预处理模型。在训练良好的情况下，AI 识别的准确率要比模板识别高很多。
+
+三、枚举阈值进行二值化效率低。
+
+改进建议：寻找一种更优的办法评判二值化的好坏。例如 Tenengrad 梯度方法可以用于评价图像清晰度。如果清晰度低，证明二值化效果差。可以枚举求出最清晰的阈值。比枚举 ISBN 识别的效率更高(显然求多次二值化快于识别一次 ISBN)。
+
+\subsection{收获与体会}
+完成本项目，让我深入掌握了数字图像处理基础的实践技术，深刻理解了原理并学会了如何实际进行操作。这些通用的技术具有很多应用场景，能让我在日后遇到计算机视觉问题时，能更快地上手去解决问题，为我打下了良好且扎实的基础。
+
+此外，在本项目中我巩固了 Python 编程能力。这也是我首次使用 \LaTeX 编写正式的文档，让我提高了表达能力和技能。
+
+在这次项目编写中，遇到重重困难。持续高强度的挑战性工作能磨练我的意志，锻炼我的思维，提高我的能力，使我更好地适应未来的 IT 行业相关工作。
+
 \section{致谢}
+首先感谢梁艳老师。老师详细的课程讲解让我掌握了数字图像处理的基本知识与技能，使我具备能力以完成本项目。
+
+接着感谢黄一肯同学，他为我提供了一些测试用的图片，并在项目开发过程中给予了我一些指导性的建议。
+
+最后感谢互联网上各大论坛上的文章作者，他们为我写项目时提供了一些参考性的原理介绍、代码片段、效果分析等帮助。
+
 \section{参考文献}
 
-%没弄明白
+%没弄明白thebibliography
 % \begin{thebibliography}{99}
 %     \bibitem[otsu] 1tsu 算法解析
 % \end{thebibliography}
@@ -925,9 +982,150 @@ def getNumberLineRange(sumHori, low=0.25):
     \item \href{https://blog.csdn.net/weixin_47365088/article/details/116566822}{提取特定图片区域}
     \item \href{https://blog.csdn.net/LPYchengxuyuan/article/details/122003702?utm_medium=distribute.pc_relevant.none-task-blog-2~default~baidujs_baidulandingword~default-0-122003702-blog-124125975.pc_relevant_aa&spm=1001.2101.3001.4242.1&utm_relevant_index=3}{形状识别}
     \item 边缘检测 Suzuki, S. and Abe, K., TopologicalStructural Analysis of Digitized Binary Images by Border Following.CVGIP 30 1, pp32-46 (1985)
-    \item 数字图像处理基础课程的全部课件 梁艳老师
+    \item 数字图像处理基础课程的全部课件(梁艳老师)
 \end{enumerate}
 
 \section{附录}
+\subsection{项目结构}
+
+文件结构如下：
+\begin{description}
+    \item[codes\textbackslash] 全部代码源码
+    \begin{description}
+        \item[template\textbackslash] 模板匹配所用标准模板图片 
+        \item[main.py] 图形化窗口和主接口调用(运行该文件即可)
+        \item[toGrey.py] 实现灰度化
+        \item[toBinary.py] 实现二值化
+        \item[preRotate.py] 实现将图片自动到数字行水平
+        \item[graphCut.py] 实现切割出图片的条形码区域
+        \item[stringSplit.py] 实现字符分割
+        \item[stringMatch.py] 实现字符匹配识别
+        \item[autoMatch.py] 核心函数接口所在，实现ISBN的优化识别
+    \end{description}
+    \item[imgs\textbackslash] 存放测试集图片
+    \item[latex\underline\ raw\textbackslash] 本文档的 \LaTeX 源码 
+\end{description}
+
+\subsection{主要函数接口}
+按代码文件列出其主要接口与函数，给出对传入参数和返回值的描述：
+\begin{description}
+    \item[main.py] 无接口。直接运行该代码文件。
+    \item[toGrey.py] 实现灰度化
+    \begin{itemize}
+        \item \verb|toGrey(img)| \\
+        传入图片矩阵，将其灰度化并返回二维矩阵
+    \end{itemize}
+    \item[toBinary.py] 实现二值化
+    \begin{itemize}
+        \item \verb|toBinary(img, x=200, ltx=0, gex=255)| \\
+        传入灰度图img和阈值x,将其二值化并返回\\
+        规定 $< x$ 的染成白色(ltx), $\ge x$ 的染成灰色(gex)
+        \item \verb|getBinary(img0, x=200, ltx=0, gex=255)| \\
+        先灰度化，再二值化，然后返回结果
+    \end{itemize}
+    \item[preRotate.py] 实现将图片自动到数字行水平
+    \begin{itemize}
+        \item \verb|getLines(img)| \\
+        传入二值化图像,输出其倍增法所有检测出来的直线(极坐标直线组)
+        \item \verb|getMidAngle(lines)| \\
+        给定极坐标直线组,返回位于中位数斜角(角度制)
+        \item \verb|rotateImg(img, ang)| \\
+        以中心旋转图像,顺时针转动 ang 角度并返回(白色填充)
+        \item \verb|autoRotateC(img)| \\
+        以彩色图像为输入，输出自动旋转后的图像
+    \end{itemize}
+    \item[graphCut.py] 实现切割出图片的条形码区域
+    \begin{itemize}
+        \item \verb|getMainRectangle(img)| \\
+        传入任意图像,返回其出现的最大矩形区域
+        \item \verb|cutImage(img)| \\
+        传入任意图像，找到最大矩形区域子图并返回\\
+        如果找不到就返回原图
+        \item \verb|autoCut(img0, thr)| \\
+        传入彩色图像，两次匹配找到最大矩形区域子图\\
+        返回结果是二值化后的子图
+    \end{itemize}
+    \item[stringSplit.py] 实现字符分割
+    \begin{itemize}
+        \item \verb|getHoriAndVertSum(img)| \\
+        输入二值化图像,依次返回其行列黑色点数和的向量
+        \item \verb|getRanges(sums, low=0.32)| \\
+        输入向量,返回所有值 $\ge low \cdot$均值的连续峰段
+        \item \verb|getNumberLineRange(sums, low=0.35)| \\
+        输入向量,返回一个数字行的下标范围 $[l,r]$
+        \item \verb|splitByVerts(img, lr)| \\
+        输入图片和峰段,返回切割后的全部子图
+        \item \verb|filtRanges(img, arr)| \\
+        输入区间列表,返回经过初步筛选后的有效区间列表
+        \item \verb|splitNumbers(img)| \\
+        输入一张二值化图像，返回其分割出来的字符子图列表
+        \item \verb|splitNumbers(img)| \\
+        输入一张二值化图像，返回其分割出来的字符子图列表
+        \item \verb|plotSumAnalyse(img0, draw2Hori=True)| \\
+        绘制彩色图像的水平垂直频次分析
+        \item \verb|plotSplit(img0)| \\
+        绘图输出数字行和分割字符
+        \item \verb|plotNumberLineAnalyse(img0)| \\
+        绘图只输出数字行及其统计特征
+    \end{itemize}
+    \item[stringMatch.py] 实现字符匹配识别
+    \begin{itemize}
+        \item \verb|loadTemplates(path='templates')| \\
+        从文件夹路径返回标准字符模板(经过二值化)
+        \item \verb|compare(target, std)| \\
+        比较 $target$ 与模板图像 $std$ 的相似性并返回
+        \item \verb|getNumber(src)| \\
+        将一张图片与全体模板比较，取最大相似的字符作结果
+        \item \verb|getMatch(img)| \\
+        给定二值化图像，输出识别结果数组
+    \end{itemize}
+    \item[autoMatch.py] 核心函数接口所在，实现ISBN的优化识别
+    \begin{itemize}
+        \item \verb|reshape(img, mw=1000, mh=1000)| \\
+        给定图片,等比例裁剪使长宽不超 $mw,mh$
+        \item \verb|preDeal(img0)| \\
+        给定一张图片,将其裁剪大小和自动旋转
+        \item \verb|filtRes(m)| \\
+        输入匹配结果，对结果进行筛除和修正并返回
+        \item \verb|getChecksum(m)| \\
+        输入ISBN码序列,返回校验码
+        \item \verb|checkISBN(m)| \\
+        输入初筛后的校验码序列,校验它是否正确
+        \item \verb|adjudgeByChecksum(m)| \\
+        给定ISBN码序列,若不合校验码将其根据校验码校正并返回
+        \item \verb|betterMatch(m1, m2)| \\
+        给定两个匹配结果，选择最优的
+        \item \verb|matchFlip(img)| \\
+        给定一张图片,将其正反都匹配一次取最优返回
+        \item \verb|iterMatch(img0)| \\
+        给定一张图片,枚举二值化阈值取最好结果\\
+        输出其ISBN字符串结果\textbf{(本项目核心函数接口)}
+    \end{itemize}
+\end{description}
+
+\subsection{完整代码}
+\subsubsection{main.py}
+\lstinputlisting[language=python,breaklines]{../codes/main.py}
+
+\subsubsection{toGrey.py}
+\lstinputlisting[language=python,breaklines]{../codes/toGrey.py}
+
+\subsubsection{toBinary.py}
+\lstinputlisting[language=python,breaklines]{../codes/toBinary.py}
+
+\subsubsection{preRotate.py}
+\lstinputlisting[language=python,breaklines]{../codes/preRotate.py}
+
+\subsubsection{graphCut.py}
+\lstinputlisting[language=python,breaklines]{../codes/graphCut.py}
+
+\subsubsection{stringSplit.py}
+\lstinputlisting[language=python,breaklines]{../codes/stringSplit.py}
+
+\subsubsection{stringMatch.py}
+\lstinputlisting[language=python,breaklines]{../codes/stringMatch.py}
+
+\subsubsection{autoMatch.py}
+\lstinputlisting[language=python,breaklines]{../codes/autoMatch.py}
 
 \end{document}
